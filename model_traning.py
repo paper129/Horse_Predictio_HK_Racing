@@ -22,7 +22,7 @@ from sklearn.metrics import accuracy_score
 #y = df[['Finish Time']].values #y value
 
 df = pd.read_csv('AllRecord-Prod.csv')
-df = df.query('Pla != -1')
+df = df.query('Pla < 90')
 df.to_csv('temp.csv')
 X = df[['Pla','Loc', 'Track', 'Going', 'Dist','Draw','JW','AW','Time','WOdd','Class']].values
 Y = df[['Time']].values
