@@ -17,7 +17,7 @@ import time
 import csv
 from itertools import islice 
 
-def proc_dri(log_obj, html, driver, soup1, year, mth, day, RaceNo, loc, syr):
+def proc_dri(log_obj, html, driver, soup1, year, mth, day, RaceNo, loc, syr, num):
     # while errFlag == False:
     soup = BeautifulSoup(html,"html.parser")
     try:
@@ -62,11 +62,11 @@ def proc_dri(log_obj, html, driver, soup1, year, mth, day, RaceNo, loc, syr):
         my_dict = {}
         log_obj.info("in dict".format())
         #headers = [header.text for header in soup.findAll('table')[2].find('tr', {'class': 'bg_blue color_w'}).find_all('td')]
-        headers = ["Place","Horse_No","Horse_Name","Jockey","Trainer","Actual_Weight","Declare_Horse_Wt","Draw","LBW","RunningPos","Finish_Time","Win_Odds",'Class','Loc', 'Length', 'Going', 'Track', "Year", "Month", "Day", "RaceNo" ]
+        headers = ["Place","Horse_No","Horse_Name","Jockey","Trainer","Actual_Weight","Declare_Horse_Wt","Draw","LBW","RunningPos","Finish_Time","Win_Odds",'Class','Loc', 'Length', 'Going', 'Track', "Year", "Month", "Day", "RaceNo", "Race" ]
         resultTable = soup.findAll('table')[2].find_all('tr', {'class' : None})
         #filename = RaceID + ".csv"
-        filename = 'racing_record_10to22_HV.csv'
-        with open('./data/' + filename, 'a', newline='', encoding='big5hkscs') as csvfile:
+        filename = 'ST.csv'
+        with open('./data/bobby/' + filename, 'a', newline='', encoding='utf8') as csvfile:
             log_obj.info('Logging to csv: Date: %s - Race %s'.format(),date ,temp2[0])
             writer = csv.DictWriter(csvfile, fieldnames=headers)
             #writer.writeheader()
@@ -84,6 +84,7 @@ def proc_dri(log_obj, html, driver, soup1, year, mth, day, RaceNo, loc, syr):
                 my_dict.update({'Month': mth})
                 my_dict.update({'Day': day})
                 my_dict.update({'RaceNo': temp2[0]})
+                my_dict.update({'Race': num})
                 
                 
                 #print(my_dict)
@@ -98,7 +99,7 @@ def proc_dri(log_obj, html, driver, soup1, year, mth, day, RaceNo, loc, syr):
 
     log_obj.info('Loop Finish')
 
-def web(log_obj, link, year, mth, day, RaceNo, loc, syr):
+def web(log_obj, link, year, mth, day, RaceNo, loc, syr, num):
     #race_season = year + "/" + year+1
     log_obj.info("Web Fetch Starts".format())
     # chrome_options = Options()
@@ -143,7 +144,7 @@ def web(log_obj, link, year, mth, day, RaceNo, loc, syr):
     fireFoxOptions.add_argument('-headless')
     driver = webdriver.Firefox(executable_path='geckodriver.exe', options=fireFoxOptions)
     driver.get(link)
-    time.sleep(5)
+    time.sleep(10)
     html = driver.page_source
     soup = BeautifulSoup(html,"html.parser")
     driver.close()
@@ -156,7 +157,7 @@ def web(log_obj, link, year, mth, day, RaceNo, loc, syr):
     if len(str(tempwebstr)) > 2: #err container exist = no race
         return False
     if len(str(tempwebstr2)) > 2: #racetab exist = have race
-        proc_dri(log_obj=log_obj, driver=driver, soup1=soup, html=html, year=year, mth=mth, day=day, RaceNo=RaceNo, loc=loc, syr=syr)
+        proc_dri(log_obj=log_obj, driver=driver, soup1=soup, html=html, year=year, mth=mth, day=day, RaceNo=RaceNo, loc=loc, syr=syr, num=num)
         return True
     if len(tempwebstr) == 2 & len(tempwebstr2) == 2:
         return False
@@ -168,12 +169,12 @@ def main():
     
     grabbing = True
     #Fetch all race data from 2010/2011 - 2021/2022 (SHA TIN)
-    syr = 10
+    syr = 21
     mth = 9
     day = 1
     num = 1
-    #loc = "ST"
-    loc = "HV" 
+    loc = "ST"
+    #loc = "HV" 
     #link = "https://racing.hkjc.com/racing/information/English/Racing/LocalResults.aspx?RaceDate=2021/02/28"
     while grabbing == True:
         if day >= 1 and day <= 9:
@@ -193,7 +194,7 @@ def main():
         #link = 'https://racing.hkjc.com/racing/information/English/Racing/LocalResults.aspx?RaceDate=' + str(year) + '/' + str(tempmth) + '/'+ str(tempday) + "&Racecourse=" + str(loc) + "&RaceNo=" + str(num)
         link = 'https://racing.hkjc.com/racing/information/Chinese/Racing/LocalResults.aspx?RaceDate=' + str(year) + '/' + str(tempmth) + '/'+ str(tempday) + "&Racecourse=" + str(loc) + "&RaceNo=" + str(num)
         log_obj.info("Link: %s", link)
-        result = web(log_obj=log_obj, link=link, year=str(year), mth=str(mth), day=str(day), RaceNo=str(num), loc=str(loc), syr=str(syr))
+        result = web(log_obj=log_obj, link=link, year=str(year), mth=str(mth), day=str(day), RaceNo=str(num), loc=str(loc), syr=str(syr), num = str(num))
         
         if day == 31 and mth == 12:
             syr += 1
@@ -221,11 +222,11 @@ def main():
         if result == True:
             log_obj.info('result == True, Race found, recording...')
             num += 1 
-            if day == 31 and num == 11:
+            if day == 31 and num == 12:
                 day = 1
                 mth += 1
                 num = 1
-            if num == 11:
+            if num == 12:
                 day +=  1
                 num = 0
 
